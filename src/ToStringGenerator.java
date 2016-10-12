@@ -1,38 +1,44 @@
 import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.psi.JavaPsiFacade;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiElementFactory;
-import com.intellij.psi.PsiField;
+import com.intellij.psi.*;
 import com.intellij.psi.codeStyle.JavaCodeStyleManager;
 
 /**
  * Created by vinayaprasadn on 1/10/16.
  */
 public class ToStringGenerator extends WriteCommandAction.Simple {
+    private PsiClass classUnderCaret;
 
-
-    private PsiClass aClass;
-
-    public ToStringGenerator(PsiClass aClass) {
-        super(aClass.getProject(), aClass.getContainingFile());
-        this.aClass = aClass;
+    public ToStringGenerator(PsiClass classUnderCaret) {
+        super(classUnderCaret.getProject(), classUnderCaret.getContainingFile());
+        this.classUnderCaret = classUnderCaret;
     }
 
     @Override
     protected void run() throws Throwable {
-        PsiElementFactory factory = JavaPsiFacade.getElementFactory(aClass.getProject());
-        PsiField[] psiFields= aClass.getFields();
-        aClass.add(factory.createMethodFromText(generateToString(psiFields),aClass));
-        JavaCodeStyleManager styleManager = JavaCodeStyleManager.getInstance(aClass.getProject());
-        styleManager.optimizeImports(aClass.getContainingFile());
-        styleManager.shortenClassReferences(aClass.getContainingFile());
+        //Get the element factory, where we can manufacture PsiMethods,fields etc.
+        PsiElementFactory elementFactory = JavaPsiFacade.getElementFactory(classUnderCaret.getProject());
+
+        //Get all fields from  class under the caret
+        PsiField[] psiFields= classUnderCaret.getFields();
+
+        //Create method from the text in the class under caret
+        String methodString = getToStringMethod(psiFields);
+        PsiMethod method = elementFactory.createMethodFromText(methodString, classUnderCaret);
+
+        //Add this method to class under caret
+        classUnderCaret.add(method);
 
     }
 
 
+    private String getToStringMethod(PsiField[] psiFields) {
+        return "@Override"+"\n"+"public String toString(){" +"return"+"\" Hello World\";"+"}";
 
-    private String generateToString(PsiField[] psiFields) {
-        String methodSignature= "@Override"+"\n"+"public String toString(){" +"\n";;
+
+    }
+
+   /* private String getToStringMethod(PsiField[] psiFields) {
+        String methodSignature= "@Override"+"\n"+"public String toString(){" +"\n";
         String methodBody="return";
         methodBody+="\"{\""+"+\"\\n\"+";
         for(PsiField psiField:psiFields){
@@ -42,5 +48,5 @@ public class ToStringGenerator extends WriteCommandAction.Simple {
         String method = methodSignature + methodBody+methodEnd;
         return method;
 
-    }
+    }*/
 }

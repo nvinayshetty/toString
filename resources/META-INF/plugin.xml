@@ -30,7 +30,7 @@
 
   <actions>
     <!-- Add your actions here -->
-    <action id="Genetare ToString" class="MouseClickAction" text="Generate ToString" description="just a simple plugin">
+    <action id="Generate ToString" class="MouseClickAction" text="Generate ToString" description="just a simple plugin">
       <add-to-group group-id="GenerateGroup" anchor="first"/>
     </action>
   </actions>

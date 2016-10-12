@@ -2,13 +2,11 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
-import com.intellij.openapi.application.Result;
-import com.intellij.openapi.command.WriteCommandAction;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.psi.*;
-import com.intellij.psi.util.PsiMethodUtil;
+``import com.intellij.openapi.editor.Editor;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by vinayaprasadn on 1/10/16.
@@ -16,32 +14,51 @@ import org.jetbrains.annotations.NotNull;
 public class MouseClickAction extends AnAction {
 
     @Override
-    public void actionPerformed(AnActionEvent e) {
-        PsiClass psiClass=getPsiClassFromContext(e);
-        new ToStringGenerator(psiClass).execute();
+    public void actionPerformed(AnActionEvent event) {
+        //get the class where the user action has began
+        PsiClass classUnderCaret=getPsiClassUnderCaret(event);
+
+        //Disable plugin from appearing if IDE is not ready
+       event.getPresentation().setEnabled(classUnderCaret!=null);
+
+        //add to string method to the class under caret
+       new ToStringGenerator(classUnderCaret).execute();
 
     }
 
 
+    @Override
+    public void update(AnActionEvent event) {
+        super.update(event);
+
+        //get the class where the user action has began
+        PsiClass classUnderCaret= getPsiClassUnderCaret(event);
+
+        //Disable plugin from appearing if IDE is not ready
+        event.getPresentation().setEnabled(classUnderCaret!=null);
+
+    }
 
 
-
-    private PsiClass getPsiClassFromContext(AnActionEvent e) {
+    private PsiClass getPsiClassUnderCaret(AnActionEvent e) {
+        //Get the file on which user is working on
         PsiFile psiFile= e.getData(LangDataKeys.PSI_FILE);
+
+        //Get the editor on which user initiated action
         Editor editor= e.getData(PlatformDataKeys.EDITOR);
         if(psiFile==null||editor==null){
-            e.getPresentation().setEnabled(false);
             return null;
         }
+
+        //get the offset where the user clicked
         int offset=editor.getCaretModel().getOffset();
-        PsiElement elementAt=psiFile.findElementAt(offset);
-        PsiClass psiClass= PsiTreeUtil.getParentOfType(elementAt,PsiClass.class);
+
+        //Get the Psi token at the user clicked position
+        PsiElement elementOffset=psiFile.findElementAt(offset);
+
+        //Get the class where user action has started
+        PsiClass psiClass= PsiTreeUtil.getParentOfType(elementOffset,PsiClass.class);
         return psiClass;
     }
 
-    @Override
-    public void update(AnActionEvent e) {
-        super.update(e);
-        PsiClass psiClass=  getPsiClassFromContext(e);
-    }
 }
